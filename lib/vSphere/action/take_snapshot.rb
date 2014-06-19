@@ -22,11 +22,10 @@ module VagrantPlugins
           vm = get_vm_by_uuid env[:vSphere_connection], env[:machine]
           raise Errors::VSphereError, :message => I18n.t('errors.missing_vm') if vm.nil?
 
-          begin
-            snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
-          rescue Exception => e
-            @logger.debug(e.message)
+          if not vm.snapshot
             snapshot = nil
+          else
+            snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
           end
 
           if not snapshot.nil?
