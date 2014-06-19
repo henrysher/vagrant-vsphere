@@ -25,7 +25,7 @@ module VagrantPlugins
           begin
             snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
           rescue Exception => e
-            puts e.message
+            @logger.debug(e.message)
             snapshot = nil
           end
 
