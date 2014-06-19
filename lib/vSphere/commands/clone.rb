@@ -13,7 +13,7 @@ class Command < Vagrant.plugin("2", :command)
     options = {}
     options[:destroy_on_error] = true
     options[:parallel] = true
-    options[:provision_ignore_sentinel] = false
+    options[:provision_ignore_sentinel] = true
     options[:force] = false
 
     opts = OptionParser.new do |o|
