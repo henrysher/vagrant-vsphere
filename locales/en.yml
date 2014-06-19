@@ -26,6 +26,8 @@ en:
       Rsyncing folder: %{hostpath} => %{guestpath}
 
     errors:
+      snapshot_exist: |-
+        Specified snapshot already exist
       missing_template: |-
         Configured template/source VM could not be found
       missing_datacenter: |-
