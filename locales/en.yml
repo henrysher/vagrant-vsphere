@@ -10,6 +10,10 @@ en:
       Calling vSphere PowerOff
     power_on_vm: |-
       Calling vSphere PowerOn
+    vm_take_snapshot_success: |-
+      Virtual machine successfully created your snapshot
+    vm_revert_snapshot_success: |-
+      Virtual machine successfully reverted to your snapshot
     vm_already_created: |-
       The VM is already created
     vm_not_created: |-
