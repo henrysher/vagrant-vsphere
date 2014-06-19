@@ -39,7 +39,7 @@ class Command < Vagrant.plugin("2", :command)
         options[:provider] = provider
       end
 
-      o.on("--force FORCE",
+      o.on("--force",
            "Force to do the action") do |force|
         options[:force] = force
       end
