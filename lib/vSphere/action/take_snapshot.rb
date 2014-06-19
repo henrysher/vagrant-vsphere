@@ -29,7 +29,7 @@ module VagrantPlugins
           end
 
           if not snapshot.nil?
-            env[:ui].error I18n.t('errors.snapshot_exist')
+            env[:ui].error I18n.t('vsphere.errors.snapshot_exist')
             # FIXME
             raise Errors::VSphereError
           end
