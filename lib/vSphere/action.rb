@@ -109,25 +109,6 @@ module VagrantPlugins
         end
       end
 
-      def self.action_clone_force
-        Vagrant::Action::Builder.new.tap do |b|
-          b.use ConfigValidate
-          b.use ConnectVSphere
-          b.use Call, IsCreated do |env, b2|
-            b2.use Clone 
-          end
-          b.use Call, IsRunning do |env, b2|
-            if !env[:result]
-              b2.use PowerOn
-            end
-          end
-          b.use Provision
-          b.use SyncFolders
-          b.use TakeSnapshot
-          b.use CloseVSphere
-        end
-      end
-
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate

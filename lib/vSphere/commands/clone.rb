@@ -14,7 +14,6 @@ class Command < Vagrant.plugin("2", :command)
     options[:destroy_on_error] = true
     options[:parallel] = true
     options[:provision_ignore_sentinel] = true
-    options[:force] = false
 
     opts = OptionParser.new do |o|
       o.banner = "Usage: vagrant clone [name] [options]"
@@ -39,10 +38,6 @@ class Command < Vagrant.plugin("2", :command)
         options[:provider] = provider
       end
 
-      o.on("--force",
-           "Force to do the action") do |force|
-        options[:force] = force
-      end
     end
 
     # Parse the options
@@ -75,12 +70,7 @@ class Command < Vagrant.plugin("2", :command)
           provider: machine.provider_name))
 
         machines << machine
-
-        if options[:force]
-          batch.action(machine, :clone_force, options)
-        else
-          batch.action(machine, :clone, options)
-        end
+        batch.action(machine, :clone, options)
       end
     end
 
