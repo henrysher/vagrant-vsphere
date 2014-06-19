@@ -85,6 +85,49 @@ module VagrantPlugins
         end
       end
 
+      def self.action_clone
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectVSphere
+          b.use Call, IsCreated do |env, b2|
+            if env[:result]
+              b2.use MessageAlreadyCreated
+              next
+            end
+
+            b2.use Clone
+          end
+          b.use Call, IsRunning do |env, b2|
+            if !env[:result]
+              b2.use PowerOn
+            end
+          end
+          b.use Provision
+          b.use SyncFolders
+          b.use TakeSnapshot
+          b.use CloseVSphere
+        end
+      end
+
+      def self.action_clone_force
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectVSphere
+          b.use Call, IsCreated do |env, b2|
+            b2.use Clone 
+          end
+          b.use Call, IsRunning do |env, b2|
+            if !env[:result]
+              b2.use PowerOn
+            end
+          end
+          b.use Provision
+          b.use SyncFolders
+          b.use TakeSnapshot
+          b.use CloseVSphere
+        end
+      end
+
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
@@ -95,14 +138,34 @@ module VagrantPlugins
               next
             end
 
-            b2.use Clone 
+            b2.use RevertSnapshot
+            b2.use PowerOn
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
             end
           end
-          b.use CloseVSphere 
+          b.use CloseVSphere
+          b.use Provision
+          b.use SyncFolders
+        end
+      end
+
+      def self.action_up_force
+        Vagrant::Action::Builder.new.tap do |b|
+          b.use ConfigValidate
+          b.use ConnectVSphere
+          b.use Call, IsCreated do |env, b2|
+            b2.use RevertSnapshot
+            b2.use PowerOn
+          end
+          b.use Call, IsRunning do |env, b2|
+            if !env[:result]
+              b2.use PowerOn
+            end
+          end
+          b.use CloseVSphere
           b.use Provision          
           b.use SyncFolders          
         end
@@ -153,6 +216,8 @@ module VagrantPlugins
       #autoload
       action_root = Pathname.new(File.expand_path('../action', __FILE__))
       autoload :Clone, action_root.join('clone')
+      autoload :TakeSnapshot, action_root.join('take_snapshot')
+      autoload :RevertSnapshot, action_root.join('revert_snapshot')
       autoload :CloseVSphere, action_root.join('close_vsphere')
       autoload :ConnectVSphere, action_root.join('connect_vsphere')
       autoload :Destroy, action_root.join('destroy')

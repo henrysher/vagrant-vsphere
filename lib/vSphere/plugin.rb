@@ -6,12 +6,22 @@ module VagrantPlugins
       name 'vsphere'
       description 'Allows Vagrant to manage machines with VMWare vSphere'
 
+      command "up" do
+        require_relative "commands/up"
+        Command
+      end
+
+      command "clone" do
+        require_relative "commands/clone"
+        Command
+      end
+
       config(:vsphere, :provider) do
         require_relative 'config'
         Config
       end
 
-      provider(:vsphere) do
+      provider(:vsphere, parallel: true) do
         # TODO: add logging
         setup_i18n
 
