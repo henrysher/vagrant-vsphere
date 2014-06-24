@@ -44,6 +44,9 @@ class Command < Vagrant.plugin("2", :command)
     argv = parse_options(opts)
     return if !argv
 
+    # Disable the provision param in clone
+    options[:provision_enabled] = false
+
     # Validate the provisioners
     validate_provisioner_flags!(options)
 
