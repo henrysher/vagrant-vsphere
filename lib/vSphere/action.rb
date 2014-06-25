@@ -96,10 +96,12 @@ module VagrantPlugins
             end
 
             b2.use Clone
+            b2.use MountToolsInstaller
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
+              b2.use MountToolsInstaller
             end
           end
           b.use Provision
@@ -121,10 +123,12 @@ module VagrantPlugins
 
             b2.use RevertSnapshot
             b2.use PowerOn
+            b2.use MountToolsInstaller
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
+              b2.use MountToolsInstaller
             end
           end
           b.use CloseVSphere
@@ -140,10 +144,12 @@ module VagrantPlugins
           b.use Call, IsCreated do |env, b2|
             b2.use RevertSnapshot
             b2.use PowerOn
+            b2.use MountToolsInstaller
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
+              b2.use MountToolsInstaller
             end
           end
           b.use CloseVSphere
@@ -199,6 +205,7 @@ module VagrantPlugins
       autoload :Clone, action_root.join('clone')
       autoload :TakeSnapshot, action_root.join('take_snapshot')
       autoload :RevertSnapshot, action_root.join('revert_snapshot')
+      autoload :MountToolsInstaller, action_root.join('mount_tools_installer')
       autoload :CloseVSphere, action_root.join('close_vsphere')
       autoload :ConnectVSphere, action_root.join('connect_vsphere')
       autoload :Destroy, action_root.join('destroy')
