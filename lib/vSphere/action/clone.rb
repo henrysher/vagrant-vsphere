@@ -123,9 +123,20 @@ module VagrantPlugins
 
           prefix = "#{machine.name}"
           prefix.gsub!(/[^-a-z0-9_\.]/i, "")
-          # milliseconds + random number suffix to allow for simultaneous `vagrant up` of the same box in different dirs
-          prefix + "_#{(Time.now.to_f * 1000.0).to_i}_#{rand(100000)}"
+          private_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :private_network }
+          p private_networks
+          if private_networks.nil? or private_networks.empty?
+            # milliseconds + random number suffix to allow for simultaneous `vagrant up` of the same box in different dirs
+            prefix += "_#{(Time.now.to_f * 1000.0).to_i}_#{rand(100000)}"
+          else
+            private_networks.each_index do |idx|
+              ipaddr = private_networks[idx][1][:ip]
+              prefix += "_" + ipaddr
+            end
+          end
+          return prefix
         end
+
       end
     end
   end
