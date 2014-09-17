@@ -13,6 +13,7 @@ module VagrantPlugins
       attr_accessor :clone_from_vm
       attr_accessor :template_name
       attr_accessor :name
+      attr_accessor :vm_base_path
       attr_accessor :customization_spec_name
       attr_accessor :data_store_name
       attr_accessor :linked_clone
@@ -30,9 +31,8 @@ module VagrantPlugins
         errors <<  I18n.t('vsphere.config.password') if password.nil?
         errors <<  I18n.t('vsphere.config.template') if template_name.nil?
 
-        # These are only required if we're cloning from an actual template
+        # Only required if we're cloning from an actual template
         errors << I18n.t('vsphere.config.compute_resource') if compute_resource_name.nil? and not clone_from_vm
-        errors << I18n.t('vsphere.config.resource_pool') if resource_pool_name.nil? and not clone_from_vm
 
         { 'vSphere Provider' => errors }
       end

@@ -1,20 +1,20 @@
 # Vagrant vSphere Provider
 
-This is a [Vagrant](http://www.vagrantup.com) 1.2+ plugin that adds a [vSphere](http://pubs.vmware.com/vsphere-50/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc_50%2Fright-pane.html)
+This is a [Vagrant](http://www.vagrantup.com) 1.6.3+ plugin that adds a [vSphere](http://pubs.vmware.com/vsphere-50/index.jsp?topic=%2Fcom.vmware.wssdk.apiref.doc_50%2Fright-pane.html)
 provider to Vagrant, allowing Vagrant to control and provision machines using VMware. New machines are created from virtual machines or templates which must be configured prior to using using this provider.
 
 This provider is built on top of the [RbVmomi](https://github.com/vmware/rbvmomi) Ruby interface to the vSphere API.
 
 ## Requirements
-* Vagrant 1.2+
+* Vagrant 1.6.3+
 * VMware + vSphere API
 * Ruby 1.9+
 * libxml2, libxml2-dev, libxslt, libxslt-dev
 
 ## Current Version
-**0.8.0**
+**version: 0.13.0**
 
-vagrant-vsphere (0.8.0) is available from [RubyGems.org](https://rubygems.org/)
+vagrant-vsphere (**version: 0.13.0**) is available from [RubyGems.org](https://rubygems.org/gems/vagrant-vsphere)
 
 ## Installation
 
@@ -90,9 +90,10 @@ This provider has the following settings, all are required unless noted:
 * `password` - password  for connecting to vSphere
 * `data_center_name` - _Optional_ datacenter containing the computed resource, the template and where the new VM will be created, if not specified the first datacenter found will be used
 * `compute_resource_name` - _Required if cloning from template_ the name of the host containing the resource pool for the new VM
-* `resource_pool_name` - _Required if cloning from template_ the resource pool for the new VM
+* `resource_pool_name` - the resource pool for the new VM. If not supplied, and cloning from a template, uses the root resource pool
 * `clone_from_vm` - _Optional_ use a virtual machine instead of a template as the source for the cloning operation
 * `template_name` - the VM or VM template to clone
+* `vm_base_path` - _Optional_ path to folder where new VM sould be created, if not specified template's parent folder will be used
 * `name` - _Optional_ name of the new VM, if missing the name will be auto generated
 * `customization_spec_name` - _Optional_ customization spec for the new VM
 * `data_store_name` - _Optional_ the datastore where the VM will be located
@@ -159,7 +160,28 @@ This is useful if running Vagrant from multiple directories or if multiple machi
   * fixes no error messages [#58 leth:no-error-message](https://github.com/nsidc/vagrant-vsphere/pull/58)
   * fixes typo [#57 targetx007](https://github.com/nsidc/vagrant-vsphere/pull/57)
   * fixes additional no error messages
-
+* 0.8.3
+  * Fixed "No error message" on rbvmomi method calls. [#74: mkuzmin:rbvmomi-error-messages](https://github.com/nsidc/vagrant-vsphere/pull/74)
+* 0.8.4
+  * Use root resource pool when cloning from template [#63: matt-richardson:support-resource-pools-on-vsphere-standard-edition](https://github.com/nsidc/vagrant-vsphere/pull/63)
+* 0.8.5
+  * fixed synced folders to work with WinRM communicator [#72 10thmagnitude:master](https://github.com/nsidc/vagrant-vsphere/pull/72)
+* 0.9.0
+  * increases Vagrant requirements to 1.6.3+
+  * Supports differentiating between SSH/WinRM communicator [#67 marnovdm:feature/waiting-for-winrm](https://github.com/nsidc/vagrant-vsphere/pull/67)
+* 0.9.1
+  * reuse folder sync code from Vagrant core. [#66 mkuzmin:sync-folders](https://github.com/nsidc/vagrant-vsphere/pull/66)
+* 0.9.2
+  * Instruct vagrant to set the guest hostname according to Vagrantfile [#69 ddub:set-hostname](https://github.com/nsidc/vagrant-vsphere/pull/69)
+* 0.10.0
+  * new optional parameter to clone into custom folder in vSphere [#73 mikola-spb:vm-base-path](https://github.com/nsidc/vagrant-vsphere/pull/73)
+  * follows semvar better, this adds functionality in a backwards compatible way, so bumps the minor. 0.9.0, should have been a major version.
+* 0.11.0
+  * Create the VM target folder if it doesn't exist #76 marnovdm:feature/create_vm_folder.
+* 0.12.0
+  * Use a directory name where Vagrantfile is stored as a prefix for VM name [#82 mkuzmin:name-prefix](https://github.com/nsidc/vagrant-vsphere/pull/82).
+* 0.13.0
+  * Find and install box file for multi-provider boxes automatically [#86 mkuzmin:install-box](https://github.com/nsidc/vagrant-vsphere/pull/86) & [#87 mkuzmin/provider-name](https://github.com/nsidc/vagrant-vsphere/pull/87).
 
 
 

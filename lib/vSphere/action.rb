@@ -29,16 +29,16 @@ module VagrantPlugins
               b2.use MessageNotCreated
               next
             end
-            
+
             b2.use Call, IsRunning do |env, b3|
               if !env[:result]
                 b3.use MessageNotRunning
-                next       
+                next
               end
-              
+
               b3.use Provision
-              b3.use SyncFolders 
-            end        
+              b3.use SyncedFolders
+            end
           end
         end
       end
@@ -51,19 +51,19 @@ module VagrantPlugins
               b2.use MessageNotCreated
               next
             end
-            
+
             b2.use Call, IsRunning do |env, b3|
               if !env[:result]
                 b3.use MessageNotRunning
                 next
               end
-              
+
               b3.use SSHExec
             end
           end
         end
       end
-      
+
       def self.action_ssh_run
         Vagrant::Action::Builder.new.tap do |b|
           b.use ConfigValidate
@@ -78,7 +78,7 @@ module VagrantPlugins
                 b3.use MessageNotRunning
                 next
               end
-              
+
               b3.use SSHRun
             end
           end
@@ -113,6 +113,7 @@ module VagrantPlugins
 
       def self.action_up
         Vagrant::Action::Builder.new.tap do |b|
+          b.use HandleBox
           b.use ConfigValidate
           b.use ConnectVSphere
           b.use Call, IsCreated do |env, b2|
@@ -133,7 +134,7 @@ module VagrantPlugins
           end
           b.use CloseVSphere
           b.use Provision
-          b.use SyncFolders
+          b.use SyncedFolders
         end
       end
 
@@ -154,7 +155,8 @@ module VagrantPlugins
           end
           b.use CloseVSphere
           b.use Provision          
-          b.use SyncFolders          
+          b.use SyncedFolders
+          b.use SetHostname
         end
       end
 
@@ -167,13 +169,13 @@ module VagrantPlugins
               b2.use MessageNotCreated
               next
             end
-            
+
             b2.use Call, IsRunning do |env, b3|
               if !env[:result]
                 b3.use MessageNotRunning
                 next
               end
-              
+
               b3.use PowerOff
             end
           end
@@ -218,8 +220,6 @@ module VagrantPlugins
       autoload :MessageNotRunning, action_root.join('message_not_running')
       autoload :PowerOff, action_root.join('power_off')
       autoload :PowerOn, action_root.join('power_on')
-      autoload :SyncFolders, action_root.join('sync_folders')
     end
   end
 end
-

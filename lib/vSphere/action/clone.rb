@@ -18,11 +18,12 @@ module VagrantPlugins
           machine = env[:machine]
           config = machine.provider_config
           connection = env[:vSphere_connection]
-          name = get_name machine, config
+          name = get_name machine, config, env[:root_path]
           dc = get_datacenter connection, machine
           template = dc.find_vm config.template_name
-
           raise Errors::VSphereError, :'missing_template' if template.nil?
+          vm_base_folder = get_vm_base_folder dc, template, config
+          raise Errors::VSphereError, :'invalid_base_path' if vm_base_folder.nil?
 
           begin
             location = get_location connection, machine, config, template
@@ -32,15 +33,14 @@ module VagrantPlugins
             spec[:customization] = get_customization_spec(machine, customization_info) unless customization_info.nil?
 
             env[:ui].info I18n.t('vsphere.creating_cloned_vm')
-            env[:ui].info " -- #{config.clone_from_vm ? "Source" : "Template"} VM: #{config.template_name}"
-            env[:ui].info " -- Name: #{name}"
+            env[:ui].info " -- #{config.clone_from_vm ? "Source" : "Template"} VM: #{template.pretty_path}"
+            env[:ui].info " -- Target VM: #{vm_base_folder.pretty_path}/#{name}"
 
-            new_vm = template.CloneVM_Task(:folder => template.parent, :name => name, :spec => spec).wait_for_completion
+            new_vm = template.CloneVM_Task(:folder => vm_base_folder, :name => name, :spec => spec).wait_for_completion
           rescue Errors::VSphereError => e
             raise
           rescue Exception => e
-            puts e.message
-            raise Errors::VSphereError, :message => e.message
+            raise Errors::VSphereError.new, e.message
           end
 
           #TODO: handle interrupted status in the environment, should the vm be destroyed?
@@ -118,10 +118,10 @@ module VagrantPlugins
           location
         end
 
-        def get_name(machine, config)
+        def get_name(machine, config, root_path)
           return config.name unless config.name.nil?
 
-          prefix = "#{machine.name}"
+          prefix = "#{root_path.basename.to_s}_#{machine.name}"
           prefix.gsub!(/[^-a-z0-9_\.]/i, "")
           private_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :private_network }
 
@@ -137,6 +137,13 @@ module VagrantPlugins
           return prefix
         end
 
+        def get_vm_base_folder(dc, template, config)
+          if config.vm_base_path.nil?
+            template.parent
+          else
+            dc.vmFolder.traverse(config.vm_base_path, RbVmomi::VIM::Folder, create=true)
+          end
+        end
       end
     end
   end
