@@ -129,7 +129,6 @@ module VagrantPlugins
             b2.use MountToolsInstaller
             b2.use Provision
             b2.use SyncedFolders
-            b2.use UnmountToolsInstaller
           end
 
           b.use CloseVSphere
@@ -153,7 +152,6 @@ module VagrantPlugins
             b2.use Provision
             b2.use SyncedFolders
             b2.use SetHostname
-            b2.use UnmountToolsInstaller
           end
 
           b.use CloseVSphere
