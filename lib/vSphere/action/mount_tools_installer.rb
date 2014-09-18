@@ -25,7 +25,6 @@ module VagrantPlugins
           begin
             vm.MountToolsInstaller()
           rescue Exception => e
-            puts e.message
             raise Errors::VSphereError, e.message
           end
 

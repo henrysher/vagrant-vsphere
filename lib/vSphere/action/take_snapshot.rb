@@ -41,7 +41,6 @@ module VagrantPlugins
                                    :quiesce => false
                                   ).wait_for_completion
           rescue Exception => e
-            puts e.message
             raise Errors::VSphereError, e.message
           end
 

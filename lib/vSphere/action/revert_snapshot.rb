@@ -26,7 +26,6 @@ module VagrantPlugins
             snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
             snapshot.snapshot.RevertToSnapshot_Task(:suppressPowerOn => true).wait_for_completion
           rescue Exception => e
-            puts e.message
             raise Errors::VSphereError, e.message
           end
 
