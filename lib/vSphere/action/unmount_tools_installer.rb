@@ -6,7 +6,7 @@ require 'vSphere/util/machine_helpers'
 module VagrantPlugins
   module VSphere
     module Action
-      class MountToolsInstaller
+      class UnmountToolsInstaller
         include Util::VimHelpers
         include Util::MachineHelpers
 
@@ -24,14 +24,14 @@ module VagrantPlugins
 
           # FIXME
           begin
-            vm.UnmountToolsInstaller()
+            vm.MountToolsInstaller()
           rescue Exception => e
           end
 
           # FIXME
           tries = 10
           begin
-            vm.MountToolsInstaller()
+            vm.UnmountToolsInstaller()
           rescue Exception => e
             # FIXME
             if e.message.include?("InvalidState")
@@ -49,7 +49,7 @@ module VagrantPlugins
 
           #TODO: handle interrupted status in the environment, should the vm be destroyed?
           machine.id = vm.config.uuid
-          env[:ui].info I18n.t('vsphere.vm_mount_tools_installer_success')          
+          env[:ui].info I18n.t('vsphere.vm_unmount_tools_installer_success')          
 
           @app.call env
         end

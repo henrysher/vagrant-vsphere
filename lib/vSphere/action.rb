@@ -96,16 +96,13 @@ module VagrantPlugins
             end
 
             b2.use Clone
-            b2.use MountToolsInstaller
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
-              b2.use MountToolsInstaller
             end
           end
-          b.use Provision
-          b.use SyncedFolders
+
           b.use TakeSnapshot
           b.use CloseVSphere
         end
@@ -123,18 +120,19 @@ module VagrantPlugins
             end
 
             b2.use RevertSnapshot
-            b2.use PowerOn
-            b2.use MountToolsInstaller
           end
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
-              b2.use MountToolsInstaller
             end
+
+            b2.use MountToolsInstaller
+            b2.use Provision
+            b2.use SyncedFolders
+            b2.use UnmountToolsInstaller
           end
+
           b.use CloseVSphere
-          b.use Provision
-          b.use SyncedFolders
         end
       end
 
@@ -152,11 +150,14 @@ module VagrantPlugins
               b2.use PowerOn
               b2.use MountToolsInstaller
             end
+
+            b2.use Provision
+            b2.use SyncedFolders
+            b2.use SetHostname
+            b2.use UnmountToolsInstaller
           end
+
           b.use CloseVSphere
-          b.use Provision          
-          b.use SyncedFolders
-          b.use SetHostname
         end
       end
 
@@ -208,6 +209,7 @@ module VagrantPlugins
       autoload :TakeSnapshot, action_root.join('take_snapshot')
       autoload :RevertSnapshot, action_root.join('revert_snapshot')
       autoload :MountToolsInstaller, action_root.join('mount_tools_installer')
+      autoload :UnmountToolsInstaller, action_root.join('unmount_tools_installer')
       autoload :CloseVSphere, action_root.join('close_vsphere')
       autoload :ConnectVSphere, action_root.join('connect_vsphere')
       autoload :Destroy, action_root.join('destroy')

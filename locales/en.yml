@@ -12,6 +12,8 @@ en:
       Calling vSphere PowerOn
     vm_mount_tools_installer_success: |-
       VMware Tools installer mounted successfully
+    vm_unmount_tools_installer_success: |-
+      VMware Tools installer unmounted successfully
     vm_take_snapshot_success: |-
       Virtual machine successfully created your snapshot
     vm_revert_snapshot_success: |-
