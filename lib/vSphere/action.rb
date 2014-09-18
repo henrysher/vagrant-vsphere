@@ -142,9 +142,8 @@ module VagrantPlugins
           b.use ConnectVSphere
           b.use Call, IsCreated do |env, b2|
             b2.use RevertSnapshot
-            b2.use PowerOn
-            b2.use MountToolsInstaller
           end
+
           b.use Call, IsRunning do |env, b2|
             if !env[:result]
               b2.use PowerOn
