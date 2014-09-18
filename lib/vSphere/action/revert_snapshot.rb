@@ -20,14 +20,14 @@ module VagrantPlugins
           machine = env[:machine]
 
           vm = get_vm_by_uuid env[:vSphere_connection], env[:machine]
-          raise Errors::VSphereError, :message => I18n.t('errors.missing_vm') if vm.nil?
+          raise Errors::VSphereError, e.message
 
           begin
             snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
             snapshot.snapshot.RevertToSnapshot_Task(:suppressPowerOn => true).wait_for_completion
           rescue Exception => e
             puts e.message
-            raise Errors::VSphereError, :message => e.message
+            raise Errors::VSphereError, e.message
           end
 
           ##TODO: handle interrupted status in the environment, should the vm be destroyed?
