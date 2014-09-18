@@ -105,7 +105,7 @@ module VagrantPlugins
             end
           end
           b.use Provision
-          b.use SyncFolders
+          b.use SyncedFolders
           b.use TakeSnapshot
           b.use CloseVSphere
         end
