@@ -29,9 +29,7 @@ module VagrantPlugins
           end
 
           if not snapshot.nil?
-            env[:ui].error I18n.t('vsphere.errors.snapshot_exist')
-            # FIXME
-            raise Errors::VSphereError
+            raise Errors::VSphereError, I18n.t('vsphere.errors.snapshot_exist')
           end
 
           begin
@@ -41,7 +39,7 @@ module VagrantPlugins
                                    :quiesce => false
                                   ).wait_for_completion
           rescue Exception => e
-            raise Errors::VSphereError, e.message
+            raise Errors::VSphereError.new, e.message
           end
 
           #TODO: handle interrupted status in the environment, should the vm be destroyed?

@@ -26,7 +26,7 @@ module VagrantPlugins
             snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
             snapshot.snapshot.RevertToSnapshot_Task(:suppressPowerOn => true).wait_for_completion
           rescue Exception => e
-            raise Errors::VSphereError, e.message
+            raise Errors::VSphereError.new, e.message
           end
 
           ##TODO: handle interrupted status in the environment, should the vm be destroyed?
