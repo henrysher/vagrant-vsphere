@@ -18,7 +18,8 @@ module VagrantPlugins
           machine = env[:machine]
           config = machine.provider_config
           connection = env[:vSphere_connection]
-          name = get_name machine, config, env[:root_path]
+          network_config = get_network_config machine
+          name = get_name machine, config, network_config, env[:root_path]
           dc = get_datacenter connection, machine
           template = dc.find_vm config.template_name
           raise Errors::VSphereError, :'missing_template' if template.nil?
@@ -29,16 +30,21 @@ module VagrantPlugins
             location = get_location connection, machine, config, template
             spec = RbVmomi::VIM.VirtualMachineCloneSpec :location => location, :powerOn => true, :template => false
             customization_info = get_customization_spec_info_by_name connection, machine
+            if customization_info.nil?
+              spec.customization = set_customization_spec(machine, config, network_config)
+            else
+              spec.customization = get_customization_spec(machine, customization_info)
+            end
 
-            spec[:customization] = get_customization_spec(machine, customization_info) unless customization_info.nil?
+            network_spec = get_network_spec network_config, dc, template
+            vm_spec = RbVmomi::VIM.VirtualMachineConfigSpec :deviceChange => network_spec unless network_spec.nil?
+            spec.config = vm_spec
 
             env[:ui].info I18n.t('vsphere.creating_cloned_vm')
             env[:ui].info " -- #{config.clone_from_vm ? "Source" : "Template"} VM: #{template.pretty_path}"
             env[:ui].info " -- Target VM: #{vm_base_folder.pretty_path}/#{name}"
 
             new_vm = template.CloneVM_Task(:folder => vm_base_folder, :name => name, :spec => spec).wait_for_completion
-          rescue Errors::VSphereError => e
-            raise
           rescue Exception => e
             raise Errors::VSphereError.new, e.message
           end
@@ -57,12 +63,112 @@ module VagrantPlugins
 
         private
 
-        def get_customization_spec(machine, spec_info)
+        def get_network_config(machine)
+
+          network_config = []
+
+          private_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :private_network }
+          public_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :public_network }
+          network_config.concat(private_networks)
+          network_config.concat(public_networks)
+
+          network_config
+        end
+
+        def get_network_spec(network_config, dc, template)
+
+          network_spec = []
+
+          # assign the private network IP to the NIC
+          cards = template.config.hardware.device.grep(RbVmomi::VIM::VirtualEthernetCard)
+          network_config.each_index do |idx|
+            nic_name = network_config[idx][1][:nic]
+            nic_type = network_config[idx][1][:type]
+
+            # First we must find the specified network
+            network = dc.network.find { |f| f.name == nic_name } or
+                abort "Could not find network with name #{nic_name} to join vm to"
+
+            card = cards[idx] or abort "could not find network card to customize"
+
+            if nic_type == "vDS"
+
+              switch_port = RbVmomi::VIM.DistributedVirtualSwitchPortConnection(
+                            :switchUuid => network.config.distributedVirtualSwitch.uuid,
+                            :portgroupKey => network.key)
+              card.backing = RbVmomi::VIM.VirtualEthernetCardDistributedVirtualPortBackingInfo(
+                             :port => switch_port)
+            else
+              card.backing = RbVmomi::VIM.VirtualEthernetCardNetworkBackingInfo(
+                             :deviceName => nic_name)
+            end
+
+            dev_spec = RbVmomi::VIM.VirtualDeviceConfigSpec(:device => card, :operation => "edit")
+            network_spec << dev_spec
+
+          end
+
+          network_spec
+        end
+
+
+        def set_customization_spec(machine, config, network_config)
+
+          nic_map = []
+
+          global_ip_settings = RbVmomi::VIM.CustomizationGlobalIPSettings(
+                               :dnsServerList => config.dns_server_list,
+                               :dnsSuffixList => config.dns_suffix_list)
+
+          prep = RbVmomi::VIM.CustomizationLinuxPrep(
+                 :domain => config.domain.to_s,
+                 :hostName => RbVmomi::VIM.CustomizationFixedName(
+                              :name => machine.name.to_s))
+
+          network_config.each_index do |idx|
+            ip = network_config[idx][1][:ip]
+            netmask = network_config[idx][1][:netmask]
+            gateway = network_config[idx][1][:gateway]
+
+            # Check for sanity and validation of network parameters.
+
+            if !ip && netmask
+              raise Errors::VSphereError, :"netmask specified but ip missing"
+            end
+
+            if ip && !netmask
+              raise Errors::VSphereError, :"ip specified but netmask missing"
+            end
+
+            # if no ip and no netmask, let's default to dhcp
+            if !ip && !netmask
+              adapter = RbVmomi::VIM.CustomizationIPSettings(
+                        :ip => RbVmomi::VIM.CustomizationDhcpIpGenerator())
+            else
+              adapter = RbVmomi::VIM.CustomizationIPSettings(
+                        :gateway => [gateway],
+                        :ip => RbVmomi::VIM.CustomizationFixedIp(
+                               :ipAddress => ip),
+                        :subnetMask => netmask)
+            end
+
+            nic_map << RbVmomi::VIM.CustomizationAdapterMapping(
+                       :adapter => adapter)
+          end
+
+          customization_spec = RbVmomi::VIM.CustomizationSpec(
+                               :globalIPSettings => global_ip_settings,
+                               :identity => prep,
+                               :nicSettingMap => nic_map)
+
+          customization_spec
+        end
+
+        def get_customization_spec(network_config, spec_info)
           customization_spec = spec_info.spec.clone
 
           # find all the configured private networks
-          private_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :private_network }
-          return customization_spec if private_networks.nil?
+          return customization_spec if networks_config.nil?
 
           # make sure we have enough NIC settings to override with the private network settings
           raise Errors::VSphereError, :'too_many_private_networks' if private_networks.length > customization_spec.nicSettingMap.length
@@ -118,23 +224,22 @@ module VagrantPlugins
           location
         end
 
-        def get_name(machine, config, root_path)
+        def get_name(machine, config, network_config, root_path)
           return config.name unless config.name.nil?
 
-          prefix = "#{root_path.basename.to_s}_#{machine.name}"
+          prefix = "#{machine.name}"
           prefix.gsub!(/[^-a-z0-9_\.]/i, "")
-          private_networks = machine.config.vm.networks.find_all { |n| n[0].eql? :private_network }
 
-          if private_networks.nil? or private_networks.empty?
+          if network_config.nil? or network_config.empty?
             # milliseconds + random number suffix to allow for simultaneous `vagrant up` of the same box in different dirs
             prefix += "_#{(Time.now.to_f * 1000.0).to_i}_#{rand(100000)}"
           else
-            private_networks.each_index do |idx|
-              ipaddr = private_networks[idx][1][:ip]
+            network_config.each_index do |idx|
+              ipaddr = network_config[idx][1][:ip]
               prefix += "_" + ipaddr
             end
           end
-          return prefix
+          prefix
         end
 
         def get_vm_base_folder(dc, template, config)

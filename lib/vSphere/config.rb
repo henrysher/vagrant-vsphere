@@ -21,6 +21,9 @@ module VagrantPlugins
       attr_accessor :proxy_port
       attr_accessor :snapshot_name
       attr_accessor :snapshot_desc
+      attr_accessor :dns_server_list
+      attr_accessor :dns_suffix_list
+      attr_accessor :domain
 
       def validate(machine)
         errors = _detected_errors
