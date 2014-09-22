@@ -37,7 +37,12 @@ module VagrantPlugins
             end
 
             network_spec = get_network_spec network_config, dc, template
-            vm_spec = RbVmomi::VIM.VirtualMachineConfigSpec :deviceChange => network_spec unless network_spec.nil?
+            vm_spec = RbVmomi::VIM.VirtualMachineConfigSpec
+            vm_spec.deviceChange = network_spec unless network_spec.nil?
+
+            vm_spec.numCPUs = config.cpu_num unless config.cpu_num.nil?
+            vm_spec.memoryMB = config.memory unless config.memory.nil?
+
             spec.config = vm_spec
 
             env[:ui].info I18n.t('vsphere.creating_cloned_vm')

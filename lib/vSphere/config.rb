@@ -24,6 +24,8 @@ module VagrantPlugins
       attr_accessor :dns_server_list
       attr_accessor :dns_suffix_list
       attr_accessor :domain
+      attr_accessor :cpu_num
+      attr_accessor :memory
 
       def validate(machine)
         errors = _detected_errors
