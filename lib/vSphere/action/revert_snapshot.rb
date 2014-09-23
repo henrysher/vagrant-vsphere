@@ -22,7 +22,7 @@ module VagrantPlugins
           vm = get_vm_by_uuid env[:vSphere_connection], env[:machine]
           raise Errors::VSphereError, I18n.t('errors.missing_vm') if vm.nil?
 
-          env[:ui].info I18n.t('vsphere.wait_for_vm_revert_snapshot')
+          env[:ui].info I18n.t('vsphere.waiting_for_vm_revert_snapshot')
 
           begin
             snapshot = find_snapshot vm.snapshot.rootSnapshotList,config.snapshot_name
