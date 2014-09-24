@@ -33,7 +33,7 @@ module VagrantPlugins
             if customization_info.nil?
               spec.customization = set_customization_spec(machine, config, network_config)
             else
-              spec.customization = get_customization_spec(machine, customization_info)
+              spec.customization = get_customization_spec(network_config, customization_info)
             end
 
             network_spec = get_network_spec network_config, dc, template
@@ -90,26 +90,28 @@ module VagrantPlugins
             nic_name = network_config[idx][1][:nic]
             nic_type = network_config[idx][1][:type]
 
+            if !nic_name.nil?
             # First we must find the specified network
-            network = dc.network.find { |f| f.name == nic_name } or
-                abort "Could not find network with name #{nic_name} to join vm to"
+              network = dc.network.find { |f| f.name == nic_name } or
+                  abort "Could not find network with name #{nic_name} to join vm to"
 
-            card = cards[idx] or abort "could not find network card to customize"
+              card = cards[idx] or abort "could not find network card to customize"
 
-            if nic_type == "vDS"
+              if !nic_type.nil? and nic_type == "vDS"
 
-              switch_port = RbVmomi::VIM.DistributedVirtualSwitchPortConnection(
-                            :switchUuid => network.config.distributedVirtualSwitch.uuid,
-                            :portgroupKey => network.key)
-              card.backing = RbVmomi::VIM.VirtualEthernetCardDistributedVirtualPortBackingInfo(
-                             :port => switch_port)
-            else
-              card.backing = RbVmomi::VIM.VirtualEthernetCardNetworkBackingInfo(
-                             :deviceName => nic_name)
+                switch_port = RbVmomi::VIM.DistributedVirtualSwitchPortConnection(
+                              :switchUuid => network.config.distributedVirtualSwitch.uuid,
+                              :portgroupKey => network.key)
+                card.backing = RbVmomi::VIM.VirtualEthernetCardDistributedVirtualPortBackingInfo(
+                               :port => switch_port)
+              else
+                card.backing = RbVmomi::VIM.VirtualEthernetCardNetworkBackingInfo(
+                               :deviceName => nic_name)
+              end
+
+              dev_spec = RbVmomi::VIM.VirtualDeviceConfigSpec(:device => card, :operation => "edit")
+              network_spec << dev_spec
             end
-
-            dev_spec = RbVmomi::VIM.VirtualDeviceConfigSpec(:device => card, :operation => "edit")
-            network_spec << dev_spec
 
           end
 
@@ -173,14 +175,14 @@ module VagrantPlugins
           customization_spec = spec_info.spec.clone
 
           # find all the configured private networks
-          return customization_spec if networks_config.nil?
+          return customization_spec if network_config.nil?
 
           # make sure we have enough NIC settings to override with the private network settings
-          raise Errors::VSphereError, :'too_many_private_networks' if private_networks.length > customization_spec.nicSettingMap.length
+          raise Errors::VSphereError, :'too_many_private_networks' if network_config.length > customization_spec.nicSettingMap.length
 
           # assign the private network IP to the NIC
-          private_networks.each_index do |idx|
-            customization_spec.nicSettingMap[idx].adapter.ip.ipAddress = private_networks[idx][1][:ip]
+          network_config.each_index do |idx|
+            customization_spec.nicSettingMap[idx].adapter.ip.ipAddress = network_config[idx][1][:ip]
           end
 
           customization_spec
