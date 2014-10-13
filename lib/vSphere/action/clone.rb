@@ -136,6 +136,11 @@ module VagrantPlugins
             ip = network_config[idx][1][:ip]
             netmask = network_config[idx][1][:netmask]
             gateway = network_config[idx][1][:gateway]
+            if not gateway.nil?
+              gateways = [gateway]
+            else
+              gateways = gateway
+            end
 
             # Check for sanity and validation of network parameters.
 
@@ -153,7 +158,7 @@ module VagrantPlugins
                         :ip => RbVmomi::VIM.CustomizationDhcpIpGenerator())
             else
               adapter = RbVmomi::VIM.CustomizationIPSettings(
-                        :gateway => [gateway],
+                        :gateway => gateways,
                         :ip => RbVmomi::VIM.CustomizationFixedIp(
                                :ipAddress => ip),
                         :subnetMask => netmask)
