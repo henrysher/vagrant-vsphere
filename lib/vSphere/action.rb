@@ -104,6 +104,7 @@ module VagrantPlugins
           end
 
           b.use TakeSnapshot
+          b.use PowerOff
           b.use CloseVSphere
         end
       end
