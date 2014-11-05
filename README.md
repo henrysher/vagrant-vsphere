@@ -12,9 +12,9 @@ This provider is built on top of the [RbVmomi](https://github.com/vmware/rbvmomi
 * libxml2, libxml2-dev, libxslt, libxslt-dev
 
 ## Current Version
-**version: 0.13.0**
+**version: 0.16.0**
 
-vagrant-vsphere (**version: 0.13.0**) is available from [RubyGems.org](https://rubygems.org/gems/vagrant-vsphere)
+vagrant-vsphere (**version: 0.16.0**) is available from [RubyGems.org](https://rubygems.org/gems/vagrant-vsphere)
 
 ## Installation
 
@@ -34,7 +34,7 @@ After the gem is built, run the plugin install command from the build directory.
 The requirements for [Nokogiri](http://nokogiri.org/) must be installed before the plugin can be installed. See Nokogiri's [tutorial](http://nokogiri.org/tutorials/installing_nokogiri.html) for
 detailed instructions.
 
-The plugin forces use of Nokogiri >= 1.5.10 to prevent conflicts with older versions of system libraries, specifically zlib.
+The plugin forces use of Nokogiri ~> 1.5 to prevent conflicts with older versions of system libraries, specifically zlib.
 
 ## Usage
 
@@ -100,6 +100,8 @@ This provider has the following settings, all are required unless noted:
 * `linked_clone` - _Optional_ link the cloned VM to the parent to share virtual disks
 * `proxy_host` - _Optional_ proxy host name for connecting to vSphere via proxy
 * `proxy_port` - _Optional_ proxy port number for connecting to vSphere via proxy
+* `vlan` - _Optional_ vlan to connect the first NIC to
+* `memory_mb` - _Optional_ Configure the amount of memory (in MB) for the new VM
 
 ### Cloning from a VM rather than a template
 
@@ -182,7 +184,16 @@ This is useful if running Vagrant from multiple directories or if multiple machi
   * Use a directory name where Vagrantfile is stored as a prefix for VM name [#82 mkuzmin:name-prefix](https://github.com/nsidc/vagrant-vsphere/pull/82).
 * 0.13.0
   * Find and install box file for multi-provider boxes automatically [#86 mkuzmin:install-box](https://github.com/nsidc/vagrant-vsphere/pull/86) & [#87 mkuzmin/provider-name](https://github.com/nsidc/vagrant-vsphere/pull/87).
-
+* 0.13.1
+  * Change Nokogiri Major Version dependency [#90 highsineburgh:SAITRADLab-master](https://github.com/nsidc/vagrant-vsphere/pull/90)
+* 0.14.0 Add vlan configuration [#91 rylarson:add-vlan-configuration](https://github.com/nsidc/vagrant-vsphere/pull/91)
+  * Added a new configuration option 'vlan' that lets you specify the vlan string
+  * If vlan is set, the clone spec is modified with an edit action to connect the first NIC on the VM to the configured VLAN.
+* 0.15.0 Make destroy work in all vm states [#93 rylarson:make-destroy-work-in-all-vm-states](https://github.com/nsidc/vagrant-vsphere/pull/93) (fixes #77)
+  * If the VM is powered on, then it is powered off, and destroyed.
+  * If the VM is powered off, it is just destroyed.
+  * If the VM is suspended, it is powered on, then powered off, then destroyed.
+* 0.16.0 Add ability to configure amount of memory the new cloned VM will have [#94 rylarson:add-memory-configuration](https://github.com/nsidc/vagrant-vsphere/pull/94).
 
 
 ## Versioning

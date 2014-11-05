@@ -28,9 +28,12 @@ module VagrantPlugins
           begin
             location = get_location connection, machine, config, template
             spec = RbVmomi::VIM.VirtualMachineCloneSpec :location => location, :powerOn => true, :template => false
+            spec[:config] = RbVmomi::VIM.VirtualMachineConfigSpec
             customization_info = get_customization_spec_info_by_name connection, machine
 
             spec[:customization] = get_customization_spec(machine, customization_info) unless customization_info.nil?
+            add_custom_vlan(template, dc, spec, config.vlan) unless config.vlan.nil?
+            add_custom_memory(spec, config.memory_mb) unless config.memory_mb.nil?
 
             env[:ui].info I18n.t('vsphere.creating_cloned_vm')
             env[:ui].info " -- #{config.clone_from_vm ? "Source" : "Template"} VM: #{template.pretty_path}"
@@ -131,8 +134,28 @@ module VagrantPlugins
           if config.vm_base_path.nil?
             template.parent
           else
-            dc.vmFolder.traverse(config.vm_base_path, RbVmomi::VIM::Folder, create=true)
+            dc.vmFolder.traverse(config.vm_base_path, RbVmomi::VIM::Folder, create = true)
           end
+        end
+
+        def add_custom_vlan(template, dc, spec, vlan)
+          spec[:config][:deviceChange] = []
+          network = get_network_by_name(dc, vlan)
+          config = template.config
+          card = config.hardware.device.grep(RbVmomi::VIM::VirtualEthernetCard).first or fail Errors::VSphereError, :missing_network_card
+          begin
+            switch_port = RbVmomi::VIM.DistributedVirtualSwitchPortConnection(:switchUuid => network.config.distributedVirtualSwitch.uuid, :portgroupKey => network.key)
+            card.backing.port = switch_port
+          rescue
+            # not connected to a distibuted switch?
+            card.backing.deviceName = network.name
+          end
+          dev_spec = RbVmomi::VIM.VirtualDeviceConfigSpec(:device => card, :operation => "edit")
+          spec[:config][:deviceChange].push dev_spec
+        end
+
+        def add_custom_memory(spec, memory_mb)
+          spec[:config][:memoryMB] = Integer(memory_mb)
         end
       end
     end

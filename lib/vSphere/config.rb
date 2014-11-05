@@ -19,6 +19,8 @@ module VagrantPlugins
       attr_accessor :linked_clone
       attr_accessor :proxy_host
       attr_accessor :proxy_port
+      attr_accessor :vlan
+      attr_accessor :memory_mb
 
       def validate(machine)
         errors = _detected_errors

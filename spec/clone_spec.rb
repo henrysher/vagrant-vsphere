@@ -12,7 +12,8 @@ describe VagrantPlugins::VSphere::Action::Clone do
     expect(@template).to have_received(:CloneVM_Task).with({
       :folder => @data_center,
       :name => NAME,
-      :spec => {:location => {:pool => @child_resource_pool} }
+      :spec => {:location => {:pool => @child_resource_pool}, 
+        :config => RbVmomi::VIM.VirtualMachineConfigSpec }
     })
   end
 
@@ -25,7 +26,8 @@ describe VagrantPlugins::VSphere::Action::Clone do
     expect(@template).to have_received(:CloneVM_Task).with({
       :folder => custom_base_folder,
       :name => NAME,
-      :spec => {:location => {:pool => @child_resource_pool} }
+      :spec => {:location => {:pool => @child_resource_pool},
+        :config => RbVmomi::VIM.VirtualMachineConfigSpec }
     })
   end
 
@@ -37,6 +39,38 @@ describe VagrantPlugins::VSphere::Action::Clone do
   it 'should call the next item in the middleware stack' do
     call
     expect(@app).to have_received :call
+  end
+
+  it 'should create a CloneVM spec with configured vlan' do
+    @machine.provider_config.stub(:vlan).and_return('vlan')
+    network = double('network', :name => 'vlan')
+    network.stub(:config).and_raise(StandardError)
+    @data_center.stub(:network).and_return([network])
+    call
+
+    expected_config = RbVmomi::VIM.VirtualMachineConfigSpec(:deviceChange => Array.new)
+    expected_dev_spec = RbVmomi::VIM.VirtualDeviceConfigSpec(:device => @device, :operation => "edit")
+    expected_config[:deviceChange].push expected_dev_spec
+
+    expect(@template).to have_received(:CloneVM_Task).with({
+      :folder => @data_center,
+      :name => NAME,
+      :spec => {:location => 
+        {:pool => @child_resource_pool},
+          :config => expected_config
+      }
+    })
+  end
+
+  it 'should create a CloneVM spec with configured memory_mb' do
+    @machine.provider_config.stub(:memory_mb).and_return(2048)
+    call
+    expect(@template).to have_received(:CloneVM_Task).with({
+      :folder => @data_center,
+      :name => NAME,
+      :spec => {:location => {:pool => @child_resource_pool}, 
+        :config => RbVmomi::VIM.VirtualMachineConfigSpec(:memoryMB => 2048) },
+    })
   end
 
   it 'should set static IP when given config spec' do
@@ -51,7 +85,8 @@ describe VagrantPlugins::VSphere::Action::Clone do
     expect(@template).to have_received(:CloneVM_Task).with({
       :folder => @data_center,
       :name => NAME,
-      :spec => {:location => {:pool => @root_resource_pool } }
+      :spec => {:location => {:pool => @root_resource_pool }, 
+        :config => RbVmomi::VIM.VirtualMachineConfigSpec }
     })
   end
 end
