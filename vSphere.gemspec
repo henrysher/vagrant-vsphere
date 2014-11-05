@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.summary = 'VMWare vSphere provider'
   s.description = 'Enables Vagrant to manage machines with VMWare vSphere.'
 
-  s.add_dependency 'nokogiri', '~>1.6.3.1'
+  s.add_dependency 'nokogiri', '~>1.5.11'
   s.add_dependency 'rbvmomi', '~> 1.8.2'
   s.add_dependency 'i18n', '~> 0.6.4'
 
